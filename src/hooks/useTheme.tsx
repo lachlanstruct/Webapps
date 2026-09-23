@@ -15,21 +15,32 @@ const STORAGE_KEY = 'struct_tools_theme_v2';
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === 'undefined') return 'dark';
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'light' || saved === 'dark') return saved;
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'light' || saved === 'dark') return saved;
+      if (window.matchMedia && typeof window.matchMedia === 'function') {
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+    } catch {
+      // fallback on error
+    }
+    return 'dark';
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'light') {
-      root.classList.remove('dark');
-      root.classList.add('light');
-    } else {
-      root.classList.remove('light');
-      root.classList.add('dark');
+    try {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      } else {
+        root.classList.remove('light');
+        root.classList.add('dark');
+      }
+      localStorage.setItem(STORAGE_KEY, theme);
+    } catch {
+      // ignore storage access error
     }
-    localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
   const toggleTheme = () => {
@@ -59,10 +70,14 @@ export function useTheme(): ThemeContextType {
       theme: fallbackTheme,
       setTheme: () => {},
       toggleTheme: () => {
-        if (typeof document !== 'undefined') {
-          const isLight = document.documentElement.classList.toggle('light');
-          document.documentElement.classList.toggle('dark', !isLight);
-          localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark');
+        try {
+          if (typeof document !== 'undefined') {
+            const isLight = document.documentElement.classList.toggle('light');
+            document.documentElement.classList.toggle('dark', !isLight);
+            localStorage.setItem(STORAGE_KEY, isLight ? 'light' : 'dark');
+          }
+        } catch {
+          // ignore storage error
         }
       },
     };
