@@ -351,5 +351,29 @@ describe('Cantilever Wall & Footing Overturning Calculation Engine', () => {
     expect(res.additionalOverturningMoment).toBeCloseTo(3.6, 4);
     expect(res.overturningMoment).toBeCloseTo(1.57248 + 3.6, 4);
   });
+
+  // Test 14: Structural member design actions (M*, V*, N*)
+  it('14. computes design actions M*, V*, N* for wall stem and footing toe/heel', () => {
+    const res = calculateOverturning(DEFAULT_OVERTURNING_INPUTS);
+    const { wall, toe, heel, footing } = res.designActions;
+
+    // Wall stem: Hw = 1.2, lineLoad = 1.092 kN/m
+    // V* = 1.092 * 1.2 = 1.3104 kN/m
+    // M* = 1.092 * 1.2^2 / 2 = 0.78624 kNm/m
+    expect(wall.vStar).toBeCloseTo(1.3104, 3);
+    expect(wall.mStar).toBeCloseTo(0.78624, 3);
+    expect(wall.stemHeight).toBe(1.2);
+    expect(wall.stemThickness).toBe(0.15);
+
+    // Footing toe and heel projections exist (B = 0.60, wallCentroidX = 0.30, tw = 0.15)
+    // Stem width is 0.15, centered -> toe = 0.225 m, heel = 0.225 m
+    expect(toe.length).toBeCloseTo(0.225, 3);
+    expect(heel.length).toBeCloseTo(0.225, 3);
+    expect(toe.mStar).toBeGreaterThanOrEqual(0);
+    expect(toe.vStar).toBeGreaterThanOrEqual(0);
+    expect(footing.nStar).toBeGreaterThan(0);
+    expect(footing.vStar).toBeGreaterThan(0);
+    expect(footing.slidingStatus).toBe('pass');
+  });
 });
 

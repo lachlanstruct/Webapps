@@ -506,6 +506,43 @@ export const CalculationDetails: React.FC<CalculationDetailsProps> = ({ inputs, 
               </div>
             </div>
           </div>
+
+          {/* Section 9: Member Design Actions (M*, V*, N*) */}
+          <div className="pt-4 space-y-2">
+            <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider">
+              <Layers className="w-3.5 h-3.5" />
+              <span>9. Concrete Member Design Actions (M*, V*, N* - Wall Stem & Footing)</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+              <div className="space-y-1">
+                <p className="text-slate-400 font-bold text-white">Wall Stem Base Section:</p>
+                <p className="text-cyan-400 font-semibold">M* = {results.designActions.wall.mStar.toFixed(2)} kNm/m</p>
+                <p className="text-slate-300">V* = {results.designActions.wall.vStar.toFixed(2)} kN/m</p>
+                <p className="text-slate-300">N* = {results.designActions.wall.nStar.toFixed(2)} kN/m</p>
+                <p className="text-[10px] text-slate-500">Critical section at footing interface</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-slate-400 font-bold text-white">
+                  Footing Toe (L = {results.designActions.toe.length.toFixed(3)}m):
+                </p>
+                <p className="text-emerald-400 font-semibold">M* = {results.designActions.toe.mStar.toFixed(2)} kNm/m</p>
+                <p className="text-slate-300">Face V* = {results.designActions.toe.vStar.toFixed(2)} kN/m</p>
+                <p className="text-slate-300">V* at d = {results.designActions.toe.vStarAtD.toFixed(2)} kN/m</p>
+                <p className="text-[10px] text-slate-500">Governs bottom tension reinforcement</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-slate-400 font-bold text-white">
+                  Footing Heel (L = {results.designActions.heel.length.toFixed(3)}m):
+                </p>
+                <p className="text-amber-400 font-semibold">M* = {results.designActions.heel.mStar.toFixed(2)} kNm/m</p>
+                <p className="text-slate-300">Face V* = {results.designActions.heel.vStar.toFixed(2)} kN/m</p>
+                <p className="text-slate-300">Slab Load w = {results.designActions.heel.downwardPressure.toFixed(1)} kPa</p>
+                <p className="text-[10px] text-slate-500">Governs top tension reinforcement</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -144,6 +144,78 @@ export interface StandardFactors {
   factorW: number; // Factor for wind load
 }
 
+export interface WallStemDesignActions {
+  /** Design Bending Moment at base of wall stem M*_wall (kNm/m) */
+  mStar: number;
+  /** Design Shear Force at base of wall stem V*_wall (kN/m) */
+  vStar: number;
+  /** Design Axial Force at base of wall stem N*_wall (kN/m) (compression) */
+  nStar: number;
+  /** Height of wall stem H_w (m) */
+  stemHeight: number;
+  /** Wall stem thickness t_w (m) */
+  stemThickness: number;
+  /** Critical design section description */
+  criticalSection: string;
+}
+
+export interface FootingToeDesignActions {
+  /** Toe projection length L_toe (m) from front face of stem to edge */
+  length: number;
+  /** Design Bending Moment at front face of stem M*_toe (kNm/m) (sagging - bottom steel in tension) */
+  mStar: number;
+  /** Design Shear Force at front face of stem V*_toe (kN/m) */
+  vStar: number;
+  /** Design Shear Force at critical distance d from stem face V*_toe,d (kN/m) */
+  vStarAtD: number;
+  /** Effective depth d used for shear (m) */
+  effectiveDepthD: number;
+  /** Soil bearing pressure at active toe tip q_toe (kPa) */
+  qToe: number;
+  /** Soil bearing pressure at stem front face q_stem_front (kPa) */
+  qStemFront: number;
+  /** Net upward pressure resultant on toe projection (kN/m) */
+  netUpwardForce: number;
+}
+
+export interface FootingHeelDesignActions {
+  /** Heel projection length L_heel (m) from back face of stem to edge */
+  length: number;
+  /** Design Bending Moment at back face of stem M*_heel (kNm/m) (hogging - top steel in tension) */
+  mStar: number;
+  /** Design Shear Force at back face of stem V*_heel (kN/m) */
+  vStar: number;
+  /** Downward dead load pressure on heel (footing slab weight + surcharge) (kPa) */
+  downwardPressure: number;
+  /** Soil bearing pressure at heel tip q_heel (kPa) */
+  qHeel: number;
+  /** Soil bearing pressure at stem back face q_stem_back (kPa) */
+  qStemBack: number;
+  /** Net downward force resultant on heel projection (kN/m) */
+  netDownwardForce: number;
+}
+
+export interface FootingOverallDesignActions {
+  /** Total Design Axial / Vertical Load N*_footing (kN/m) */
+  nStar: number;
+  /** Total Design Base Shear V*_footing (kN/m) */
+  vStar: number;
+  /** Peak Design Soil Bearing Pressure q*_max (kPa) */
+  qStarMax: number;
+  /** Design sliding friction resistance capacity phi * V_u,slide (kN/m) */
+  slidingCapacity: number;
+  /** Sliding factor of safety or status */
+  slidingStatus: 'pass' | 'fail';
+}
+
+export interface StructuralDesignActions {
+  wall: WallStemDesignActions;
+  toe: FootingToeDesignActions;
+  heel: FootingHeelDesignActions;
+  footing: FootingOverallDesignActions;
+  designStandardText: string;
+}
+
 export interface OverturningResults {
   // Wind loading
   /** Design wind pressure p_d = p * C (kPa) */
@@ -209,6 +281,9 @@ export interface OverturningResults {
 
   // Soil Bearing Pressure Analysis
   bearing: BearingPressureResults;
+
+  // Structural Member Design Actions (M*, V*, N* for wall stem & footing)
+  designActions: StructuralDesignActions;
 
   // Overall Pass / Fail assessment
   status: 'pass' | 'fail' | 'indeterminate';
@@ -679,6 +754,16 @@ export function calculateOverturning(inputs: OverturningInputs): OverturningResu
     }
   }
 
+  // 10. Structural Member Design Actions (M*, V*, N*)
+  const designActions = computeStructuralDesignActions(
+    inputs,
+    lineLoad,
+    bearing,
+    designStandard,
+    as1170Combo,
+    additionalLoads
+  );
+
   return {
     designPressure,
     lineLoad,
@@ -709,8 +794,197 @@ export function calculateOverturning(inputs: OverturningInputs): OverturningResu
     factoredOverturningMoment,
     designRatio,
     bearing,
+    designActions,
     status,
     ratioMargin,
+  };
+}
+
+export function computeStructuralDesignActions(
+  inputs: OverturningInputs,
+  lineLoad: number,
+  bearing: BearingPressureResults,
+  designStandard: DesignStandard,
+  as1170Combo: AS1170Combo,
+  additionalLoads: AdditionalLoad[]
+): StructuralDesignActions {
+  const Hw = inputs.wallHeight;
+  const tw = inputs.wallThickness;
+  const B = inputs.footingWidth;
+  const D = inputs.footingDepth;
+  const gammaW = inputs.wallUnitWeight;
+  const gammaF = inputs.footingUnitWeight;
+  const isLeftToRight = inputs.windDirection === 'left_to_right';
+
+  const isAS = designStandard === 'AS_NZS_1170';
+  const factorWind = 1.0;
+  const factorG_stem = isAS ? 1.2 : 1.0;
+  const factorG_rel = isAS ? 0.9 : 1.0;
+  const factorG_dst = isAS ? 1.2 : 1.0;
+
+  // 1. Wall Stem Base Actions (critical interface at top of footing)
+  let stemShear = lineLoad * Hw * factorWind;
+  let stemMoment = lineLoad * ((Hw * Hw) / 2) * factorWind;
+  let stemAxial = Hw * tw * gammaW * factorG_stem;
+
+  for (const load of additionalLoads) {
+    const yAboveFooting = (load.heightY ?? (D + Hw)) - D;
+    if (yAboveFooting >= 0) {
+      const loadFactor = isAS ? (load.action === 'W' ? 1.0 : load.action === 'G' ? 1.2 : 1.5) : 1.0;
+      if (load.type === 'point_horizontal') {
+        stemShear += load.value * loadFactor;
+        stemMoment += load.value * yAboveFooting * loadFactor;
+      } else if (load.type === 'moment') {
+        stemMoment += load.value * loadFactor;
+      } else if (load.type === 'point_vertical') {
+        stemAxial += load.value * loadFactor;
+      }
+    }
+  }
+
+  // 2. Toe and Heel Projection Geometry
+  let L_toe = 0;
+  let L_heel = 0;
+  if (isLeftToRight) {
+    const stemFrontX = Math.min(B, inputs.wallCentroidX + tw / 2);
+    const stemBackX = Math.max(0, inputs.wallCentroidX - tw / 2);
+    L_toe = Math.max(0, B - stemFrontX);
+    L_heel = Math.max(0, stemBackX);
+  } else {
+    const stemFrontX = Math.max(0, inputs.wallCentroidX - tw / 2);
+    const stemBackX = Math.min(B, inputs.wallCentroidX + tw / 2);
+    L_toe = Math.max(0, stemFrontX);
+    L_heel = Math.max(0, B - stemBackX);
+  }
+
+  // 3. Soil Pressure Distribution along base
+  const qMax = bearing.qMax;
+  const qMin = bearing.qMin;
+  const contactStatus = bearing.contactStatus;
+  const Lc = bearing.effectiveContactWidth;
+
+  const getSoilPressureAt = (s: number): number => {
+    if (contactStatus === 'overturned' || s < 0 || s > B) return 0;
+    if (contactStatus === 'full_contact') {
+      return Math.max(0, qMax - (qMax - qMin) * (s / B));
+    }
+    if (s <= Lc) {
+      return Math.max(0, qMax * (1 - s / Math.max(0.001, Lc)));
+    }
+    return 0;
+  };
+
+  const qToe = getSoilPressureAt(0);
+  const qStemFront = getSoilPressureAt(L_toe);
+  const qStemBack = getSoilPressureAt(B - L_heel);
+  const qHeel = getSoilPressureAt(B);
+
+  // 4. Toe Cantilever Design Actions (Bending Moment & Shear at stem face)
+  const footingWeightPerM2 = D * gammaF;
+  const relievingDownwardPressure = footingWeightPerM2 * factorG_rel;
+
+  const steps = 100;
+  let toeShear = 0;
+  let toeMoment = 0;
+  const ds = L_toe > 0 ? L_toe / steps : 0;
+  if (L_toe > 0) {
+    for (let i = 0; i < steps; i++) {
+      const sMid = (i + 0.5) * ds;
+      const qMid = getSoilPressureAt(sMid);
+      const qNet = Math.max(0, qMid - relievingDownwardPressure);
+      toeShear += qNet * ds;
+      toeMoment += qNet * (L_toe - sMid) * ds;
+    }
+  }
+
+  // One-way shear at critical distance d from stem face: section at s = max(0, L_toe - d)
+  const d_eff = Math.max(0.10, D - 0.07);
+  let toeShearAtD = 0;
+  const toeLengthMinusD = Math.max(0, L_toe - d_eff);
+  if (toeLengthMinusD > 0) {
+    const dsD = toeLengthMinusD / steps;
+    for (let i = 0; i < steps; i++) {
+      const sMid = (i + 0.5) * dsD;
+      const qMid = getSoilPressureAt(sMid);
+      const qNet = Math.max(0, qMid - relievingDownwardPressure);
+      toeShearAtD += qNet * dsD;
+    }
+  }
+
+  // 5. Heel Cantilever Design Actions (Bending Moment & Shear at back face of stem)
+  let surchargePressure = 0;
+  for (const load of additionalLoads) {
+    if (load.type === 'surcharge_udl' && (load.surface === 'heel' || load.surface === 'full' || !load.surface)) {
+      const loadFactor = isAS ? (load.action === 'G' ? 1.2 : 1.5) : 1.0;
+      surchargePressure += load.value * loadFactor;
+    }
+  }
+  const heelDownwardPressure = footingWeightPerM2 * factorG_dst + surchargePressure;
+
+  let heelShear = 0;
+  let heelMoment = 0;
+  const du = L_heel > 0 ? L_heel / steps : 0;
+  if (L_heel > 0) {
+    for (let i = 0; i < steps; i++) {
+      const uMid = (i + 0.5) * du;
+      const sFromToe = B - uMid;
+      const qSoil = getSoilPressureAt(sFromToe);
+      const qNetDown = Math.max(0, heelDownwardPressure - qSoil);
+      heelShear += qNetDown * du;
+      heelMoment += qNetDown * (L_heel - uMid) * du;
+    }
+  }
+
+  // 6. Overall Footing Design Actions
+  const totalVertical = bearing.totalVerticalLoad;
+  const totalHorizontal = lineLoad * Hw + additionalLoads
+    .filter(l => l.type === 'point_horizontal')
+    .reduce((sum, l) => sum + l.value, 0);
+
+  const phi_slide = 0.8;
+  const mu_friction = 0.50;
+  const minVerticalForSliding = (Hw * tw * gammaW + B * D * gammaF) * (isAS ? 0.9 : 1.0);
+  const slidingCapacity = phi_slide * mu_friction * minVerticalForSliding;
+  const slidingStatus = totalHorizontal <= slidingCapacity + 1e-6 ? 'pass' : 'fail';
+
+  return {
+    wall: {
+      mStar: Math.max(0, stemMoment),
+      vStar: Math.max(0, stemShear),
+      nStar: Math.max(0, stemAxial),
+      stemHeight: Hw,
+      stemThickness: tw,
+      criticalSection: 'At base of stem (interface with top of footing slab)',
+    },
+    toe: {
+      length: L_toe,
+      mStar: Math.max(0, toeMoment),
+      vStar: Math.max(0, toeShear),
+      vStarAtD: Math.max(0, toeShearAtD),
+      effectiveDepthD: d_eff,
+      qToe,
+      qStemFront,
+      netUpwardForce: Math.max(0, toeShear),
+    },
+    heel: {
+      length: L_heel,
+      mStar: Math.max(0, heelMoment),
+      vStar: Math.max(0, heelShear),
+      downwardPressure: heelDownwardPressure,
+      qHeel,
+      qStemBack,
+      netDownwardForce: Math.max(0, heelShear),
+    },
+    footing: {
+      nStar: totalVertical,
+      vStar: totalHorizontal,
+      qStarMax: qMax,
+      slidingCapacity,
+      slidingStatus,
+    },
+    designStandardText: isAS
+      ? `AS/NZS 1170.0:2002 & AS 3600:2018 (Limit State Design Actions)`
+      : `Working Stress / ASD (Nominal Actions)`,
   };
 }
 

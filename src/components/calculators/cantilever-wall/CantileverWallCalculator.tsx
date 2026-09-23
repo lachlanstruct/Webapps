@@ -36,6 +36,7 @@ import { StandardsToggle } from './StandardsToggle';
 import { AdditionalLoadsManager } from './AdditionalLoadsManager';
 import { PresetModal } from './PresetModal';
 import { CalculationReportModal } from './CalculationReportModal';
+import { DesignActionsCard } from './DesignActionsCard';
 
 const STORAGE_KEY = 'structural_tools_overturning_inputs_v2';
 
@@ -716,6 +717,9 @@ export const CantileverWallCalculator: React.FC = () => {
             results={results}
             onRequiredRatioChange={val => updateInput('requiredRatio', val)}
           />
+
+          {/* Structural Member Design Actions (M*, V*, N*) Card */}
+          <DesignActionsCard inputs={inputs} results={results} />
 
           {/* Soil Bearing Pressure Check Card */}
           <BearingPressureCard

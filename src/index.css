@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -135,19 +136,40 @@ html.light .text-rose-300 {
   background: rgba(148, 163, 184, 0.45);
 }
 
-/* PRINT MEDIA STYLES for PDF Export / Calculation Sheets */
+/* TRUE A4 PRINT MEDIA STYLES FOR PDF CALCULATION SHEETS */
+@page {
+  size: A4 portrait;
+  margin: 12mm 15mm 15mm 15mm;
+}
+
 @media print {
-  /* Hide UI navigation, buttons, interactive toggles */
+  /* Hide all interactive app chrome, navbar, sidebar, buttons */
   header,
   footer,
   aside,
   .no-print,
   button,
-  .sticky-bar {
+  .sticky-bar,
+  #offline-indicator {
     display: none !important;
   }
 
-  body,
+  html,
+  body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    font-size: 10.5pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   #root,
   main {
     background-color: #ffffff !important;
@@ -156,14 +178,95 @@ html.light .text-rose-300 {
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Unfold modal dialog into standard document flow */
+  .print-modal-overlay {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+    z-index: auto !important;
+    inset: auto !important;
+  }
+
+  .print-modal-content {
+    position: static !important;
+    display: block !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
   }
 
   .print-page {
-    page-break-after: auto;
-    page-break-inside: avoid;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
     box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
+    border: none !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* Page break rules for clean A4 pagination */
+  .page-break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .page-break-before {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  /* Diagram printing optimizations */
+  .print-diagram-box {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    padding: 8px !important;
+  }
+
+  .print-diagram-box svg {
+    max-height: 380px !important;
+    width: 100% !important;
+  }
+
+  /* Ensure text inputs print cleanly without boxy backgrounds */
+  input[type="text"] {
+    border: none !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    color: #0f172a !important;
+    font-weight: bold !important;
+  }
+
+  /* KaTeX mathematical typography crispness in print */
+  .katex {
+    font-size: 1.05em !important;
     color: #0f172a !important;
   }
 
