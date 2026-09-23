@@ -6,7 +6,8 @@
 import React, { useState } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
 import { CantileverWallCalculator } from './components/calculators/cantilever-wall/CantileverWallCalculator';
-import { Box, Wrench, ArrowLeft } from 'lucide-react';
+import { HipRafterCalculator } from './components/calculators/hip-rafter/HipRafterCalculator';
+import { Wrench, ArrowLeft } from 'lucide-react';
 import { NAVIGATION_CATEGORIES } from './types/navigation';
 
 export default function App() {
@@ -32,6 +33,8 @@ export default function App() {
     >
       {activeCalcId === 'footing-overturning' ? (
         <CantileverWallCalculator />
+      ) : activeCalcId === 'hip-rafter' ? (
+        <HipRafterCalculator />
       ) : (
         <div className="py-16 px-4 text-center max-w-lg mx-auto space-y-4">
           <div className="w-12 h-12 mx-auto rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400">

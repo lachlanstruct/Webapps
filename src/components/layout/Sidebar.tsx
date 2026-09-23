@@ -93,6 +93,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className="truncate">{item.title}</span>
                     {isActive ? (
                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse ml-2 shrink-0" />
+                    ) : item.badge ? (
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 ml-2 shrink-0">
+                        {item.badge}
+                      </span>
                     ) : isComingSoon ? (
                       <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700/40 ml-2 shrink-0">
                         Soon

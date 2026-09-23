@@ -73,6 +73,14 @@ export const NAVIGATION_CATEGORIES: NavCategory[] = [
     title: 'Roof / Trusses',
     items: [
       {
+        id: 'hip-rafter',
+        title: 'Hip Truss / Rafter Analysis',
+        status: 'active',
+        category: 'Roof / Trusses',
+        description: 'Tributary area, triangular loading, moments, shears & reactions for hip rafters/trusses',
+        badge: 'NEW',
+      },
+      {
         id: 'girder-truss-reactions',
         title: 'Girder Truss Reactions',
         status: 'coming_soon',
