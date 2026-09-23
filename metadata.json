@@ -1,0 +1,8 @@
+{
+  "name": "Remix Structural Tools",
+  "description": "Professional structural engineering calculation suite starting with cantilever wall and footing overturning stability checks under wind load.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

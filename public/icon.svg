@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="wallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="footingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#64748b" />
+    </linearGradient>
+    <pattern id="soilHatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#475569" stroke-width="2" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)" />
+
+  <!-- Grid / Technical Backdrop -->
+  <line x1="64" y1="400" x2="448" y2="400" stroke="#334155" stroke-width="2" stroke-dasharray="4 4" />
+  <line x1="64" y1="300" x2="448" y2="300" stroke="#334155" stroke-width="1" stroke-dasharray="4 4" />
+  <line x1="64" y1="180" x2="448" y2="180" stroke="#334155" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- Footing (B x D) -->
+  <rect x="136" y="320" width="240" height="96" rx="4" fill="url(#footingGrad)" stroke="#cbd5e1" stroke-width="3" />
+  
+  <!-- Footing Centroid Marker -->
+  <line x1="256" y1="320" x2="256" y2="416" stroke="#0f172a" stroke-width="2" stroke-dasharray="3 3" />
+
+  <!-- Cantilever Wall (z x t) -->
+  <rect x="232" y="100" width="48" height="220" rx="2" fill="url(#wallGrad)" stroke="#e0f2fe" stroke-width="3" />
+
+  <!-- Wind Load Arrows -->
+  <g stroke="#38bdf8" stroke-width="4" stroke-linecap="round">
+    <line x1="90" y1="140" x2="210" y2="140" />
+    <polygon points="210,134 224,140 210,146" fill="#38bdf8" />
+
+    <line x1="90" y1="200" x2="210" y2="200" />
+    <polygon points="210,194 224,200 210,206" fill="#38bdf8" />
+
+    <line x1="90" y1="260" x2="210" y2="260" />
+    <polygon points="210,254 224,260 210,266" fill="#38bdf8" />
+  </g>
+
+  <!-- Overturning Moment Arc at Toe (right toe x=376, y=416) -->
+  <path d="M 400 370 A 50 50 0 0 1 426 430" fill="none" stroke="#f43f5e" stroke-width="5" stroke-linecap="round" />
+  <polygon points="428,438 416,424 434,420" fill="#f43f5e" />
+
+  <!-- Resisting Weight Arrow (W_f) -->
+  <line x1="256" y1="340" x2="256" y2="395" stroke="#22c55e" stroke-width="4" stroke-linecap="round" />
+  <polygon points="250,395 256,408 262,395" fill="#22c55e" />
+
+  <!-- Toe Pivot Node -->
+  <circle cx="376" cy="416" r="7" fill="#f43f5e" stroke="#ffffff" stroke-width="2" />
+</svg>
